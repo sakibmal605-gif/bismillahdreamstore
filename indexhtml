@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bismillah Dream Store</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f5f7f6;color:#222}
+header{background:#087d55;color:white;text-align:center;padding:20px}
+nav{background:#065e42;padding:13px;text-align:center}
+nav a,nav button{color:white;margin:8px;text-decoration:none;background:none;border:0;cursor:pointer}
+.hero{text-align:center;padding:35px;background:#d9f5e9}
+input,button{padding:11px;margin:5px;border-radius:7px;border:1px solid #ddd}
+button{background:#087d55;color:white;cursor:pointer}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;padding:15px}
+.card{background:white;padding:12px;text-align:center;border-radius:12px}
+.card img{width:100%;height:145px;object-fit:cover}
+.price{color:#087d55;font-weight:bold}
+section{padding:15px}
+#admin,#login{display:none;background:white;margin:15px;padding:15px;border-radius:12px}
+#admin input{width:90%;max-width:400px}
+footer{text-align:center;background:#064c37;color:white;padding:25px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🌙 BISMILLAH DREAM STORE</h1>
+<p>Your Dream Shopping Destination</p>
+</header>
+
+<nav>
+<a href="#">Home</a>
+<a href="#products">Products</a>
+<a href="#cart">Cart 🛒 <span id="count">0</span></a>
+<button onclick="showLogin()">Admin Login</button>
+</nav>
+
+<div class="hero">
+<h2>Welcome to Bismillah Dream Store ❤️</h2>
+<p>Shop Everything You Love!</p>
+</div>
+
+<input id="search" placeholder="Search products..." oninput="showProducts()" style="display:block;width:90%;margin:15px auto">
+
+<h2 style="text-align:center" id="products">Our Products 🛍️</h2>
+<div class="products" id="productList"></div>
+
+<section id="cart">
+<h2>🛒 Shopping Cart</h2>
+<div id="cartItems">Cart is empty.</div>
+<h3 id="total">Total: ৳0</h3>
+<button onclick="checkout()">Order on WhatsApp</button>
+</section>
+
+<div id="login">
+<h2>🔐 Admin Login</h2>
+<input type="password" id="password" placeholder="Enter Admin Password">
+<br>
+<button onclick="login()">Login</button>
+<button onclick="hideLogin()">Cancel</button>
+<p id="loginMessage"></p>
+</div>
+
+<div id="admin">
+<h2>⚙️ Admin Dashboard</h2>
+<h3>Add / Edit Product</h3>
+
+<input id="pname" placeholder="Product Name"><br>
+<input id="pprice" type="number" placeholder="Product Price"><br>
+<input id="pcat" placeholder="Category"><br>
+<label>Upload Product Image:</label><br>
+<input id="pimage" type="file" accept="image/*"><br>
+<button onclick="saveProduct()">Save Product</button>
+<button onclick="clearForm()">Clear</button>
+
+<hr>
+<h3>Manage Products</h3>
+<div id="adminProducts"></div>
+<br>
+<button onclick="logout()">Logout</button>
+</div>
+
+<footer>
+<h2>BISMILLAH DREAM STORE</h2>
+<p>Thank you for shopping with us ❤️</p>
+<p>Contact: Your WhatsApp Number</p>
+</footer>
+
+<script>
+// Admin password
+const ADMIN_PASSWORD = "dream369258";
+
+// Replace with your WhatsApp number
+const PHONE = "8801XXXXXXXXX";
+
+const initialProducts = [
+{name:"Stylish Dress",price:850,cat:"Fashion",img:"https://placehold.co/300x200?text=Dress"},
+{name:"Beauty Cream",price:450,cat:"Beauty",img:"https://placehold.co/300x200?text=Beauty"},
+{name:"Smart Watch",price:1200,cat:"Electronics",img:"https://placehold.co/300x200?text=Watch"},
+{name:"Home Decor",price:650,cat:"Home",img:"https://placehold.co/300x200?text=Home"},
+{name:"Gift Box",price:550,cat:"Gift",img:"https://placehold.co/300x200?text=Gift"}
+];
+
+let products = JSON.parse(localStorage.getItem("dreamProducts")) || initialProducts;
+let cart=[];
+let editIndex=-1;
+let uploadedImage="";
+
+function saveData(){
+localStorage.setItem("dreamProducts",JSON.stringify(products));
+}
+
+function showProducts(){
+let q=document.getElementById("search").value.toLowerCase();
+let list=products.filter(p=>p.name.toLowerCase().includes(q));
+document.getElementById("productList").innerHTML=list.map(p=>`
+<div class="card">
+<img src="${p.img}" alt="${p.name}">
+<h3>${p.name}</h3>
+<p class="price">৳${p.price}</p>
+<button onclick="addCart('${p.name.replace(/'/g,"\\'")}')">Add to Cart</button>
+</div>`).join("");
+}
+
+function addCart(name){
+let p=products.find(x=>x.name===name);
+if(p)cart.push(p);
+updateCart();
+}
+
+function updateCart(){
+document.getElementById("count").innerText=cart.length;
+document.getElementById("cartItems").innerHTML=cart.map((p,i)=>
+`${p.name} - ৳${p.price} <button onclick="removeItem(${i})">Remove</button><br>`
+).join("")||"Cart is empty.";
+document.getElementById("total").innerText="Total: ৳"+
+cart.reduce((s,p)=>s+p.price,0);
+}
+
+function removeItem(i){
+cart.splice(i,1);
+updateCart();
+}
+
+function checkout(){
+if(!cart.length)return alert("Cart is empty!");
+if(PHONE.includes("X"))return alert("Please set your WhatsApp number in the code.");
+let msg="Assalamu Alaikum! My order:\n"+
+cart.map(p=>p.name+" - Tk "+p.price).join("\n")+
+"\nTotal: Tk "+cart.reduce((s,p)=>s+p.price,0);
+window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent(msg),"_blank");
+}
+
+function showLogin(){
+document.getElementById("login").style.display="block";
+document.getElementById("password").value="";
+}
+
+function hideLogin(){
+document.getElementById("login").style.display="none";
+}
+
+function login(){
+if(document.getElementById("password").value===ADMIN_PASSWORD){
+hideLogin();
+document.getElementById("admin").style.display="block";
+showAdminProducts();
+}else{
+document.getElementById("loginMessage").innerText="Wrong password!";
+}
+}
+
+function logout(){
+document.getElementById("admin").style.display="none";
+clearForm();
+}
+
+function saveProduct(){
+let name=document.getElementById("pname").value.trim();
+let price=Number(document.getElementById("pprice").value);
+let cat=document.getElementById("pcat").value.trim();
+
+if(!name||!price||!cat){
+alert("Please enter name, price and category.");
+return;
+}
+
+let oldImage=editIndex>=0?products[editIndex].img:"https://placehold.co/300x200?text=Product";
+let product={name,price,cat,img:uploadedImage||oldImage};
+
+if(editIndex>=0){
+products[editIndex]=product;
+}else{
+products.push(product);
+}
+
+saveData();
+showProducts();
+showAdminProducts();
+clearForm();
+alert("Product saved successfully!");
+}
+
+document.getElementById("pimage").addEventListener("change",function(){
+let file=this.files[0];
+if(!file)return;
+if(file.size>1500000){
+alert("Please choose an image smaller than 1.5 MB.");
+this.value="";
+return;
+}
+let reader=new FileReader();
+reader.onload=e=>uploadedImage=e.target.result;
+reader.readAsDataURL(file);
+});
+
+function showAdminProducts(){
+document.getElementById("adminProducts").innerHTML=products.map((p,i)=>`
+<div style="border-bottom:1px solid #ddd;padding:10px">
+<img src="${p.img}" width="65" height="55" style="object-fit:cover">
+<b>${p.name}</b> - ৳${p.price}
+<button onclick="editProduct(${i})">Edit</button>
+<button onclick="deleteProduct(${i})">Delete</button>
+</div>`).join("");
+}
+
+function editProduct(i){
+editIndex=i;
+let p=products[i];
+document.getElementById("pname").value=p.name;
+document.getElementById("pprice").value=p.price;
+document.getElementById("pcat").value=p.cat;
+uploadedImage="";
+document.getElementById("pimage").value="";
+window.scrollTo(0,document.getElementById("admin").offsetTop);
+}
+
+function deleteProduct(i){
+if(confirm("Delete this product?")){
+products.splice(i,1);
+saveData();
+showProducts();
+showAdminProducts();
+clearForm();
+}
+}
+
+function clearForm(){
+editIndex=-1;
+uploadedImage="";
+document.getElementById("pname").value="";
+document.getElementById("pprice").value="";
+document.getElementById("pcat").value="";
+document.getElementById("pimage").value="";
+}
+
+showProducts();
+</script>
+</body>
+</html>
